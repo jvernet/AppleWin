@@ -135,6 +135,40 @@ void CheckJoystick0()
       xpos[0] = (info.wXpos-joysubx[0]) >> joyshrx[0];
       ypos[0] = (info.wYpos-joysuby[0]) >> joyshry[0];
 
+	  double xCentered = double(xpos[0]) / 128.0 - 1.0; // in [-1, +1)
+	  double yCentered = double(ypos[0]) / 128.0 - 1.0; // in [-1, +1)
+
+	  // either of the following methods (or a combination)
+	  // allows to reach the corners
+	  double coeff;
+
+	  // 1) remap the circle to the square
+	  if (xCentered != 0.0 && yCentered != 0.0)
+	  {
+		  const double ratio = double(xCentered) / double(yCentered);
+		  const double side2 = min(ratio * ratio, 1.0 / (ratio * ratio));
+		  const double side1 = 1.0;
+		  const double lenghtToUnitSquare = sqrt(side1 + side2); // they are already squared
+		  coeff = lenghtToUnitSquare;
+	  }
+	  else
+	  {
+		  coeff = 1.0;
+	  }
+
+	  // 2) simply enlarge the circle and truncate
+	  // coeff = sqrt(2.0);
+
+	  xCentered *= coeff;
+	  yCentered *= coeff;
+
+	  // truncate in all cases for safety
+	  xCentered = max(-1.0, min(1.0, xCentered));
+	  yCentered = max(-1.0, min(1.0, yCentered));
+
+	  xpos[0] = int((xCentered + 1.0) * 128.0);
+	  ypos[0] = int((yCentered + 1.0) * 128.0);
+
 	  // NB. This does not work for analogue joysticks (not self-centreing) - except if Trim=0
 	  if(xpos[0] == 127 || xpos[0] == 128) xpos[0] += g_nPdlTrimX;
 	  if(ypos[0] == 127 || ypos[0] == 128) ypos[0] += g_nPdlTrimY;
