@@ -340,8 +340,11 @@ namespace
     sg_Disk2Card.Destroy();
     ImageDestroy();
 
-    fclose(g_fh);
-    g_fh = NULL;
+    if (g_fh)
+    {
+      fclose(g_fh);
+      g_fh = NULL;
+    }
 
     return 0;
   }
