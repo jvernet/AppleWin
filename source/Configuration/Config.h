@@ -11,12 +11,13 @@
 class CConfigNeedingRestart
 {
 public:
-	CConfigNeedingRestart(UINT bEnableTheFreezesF8Rom = false) :
+	CConfigNeedingRestart() :
 		m_Apple2Type( GetApple2Type() ),
 		m_CpuType( GetMainCpu() ),
 		m_uSaveLoadStateMsg(0),
 		m_videoRefreshRate( GetVideo().GetVideoRefreshRate() )
 	{
+		UINT bEnableTheFreezesF8Rom = false;
 		m_bEnableHDD = HD_CardIsEnabled();
 		m_bEnableTheFreezesF8Rom = bEnableTheFreezesF8Rom;
 		memset(&m_Slot, 0, sizeof(m_Slot));
