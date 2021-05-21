@@ -168,8 +168,6 @@ void Snapshot_UpdatePath(void)
 
 //-----------------------------------------------------------------------------
 
-static CConfigNeedingRestart m_ConfigNew;
-
 static std::string GetSnapshotUnitApple2Name(void)
 {
 	static const std::string name("Apple2");
@@ -268,17 +266,17 @@ static UINT ParseFileHdr(void)
 
 //---
 
-static void ParseUnitApple2(YamlLoadHelper& yamlLoadHelper, UINT version)
+static void ParseUnitApple2(YamlLoadHelper& yamlLoadHelper, UINT version, CConfigNeedingRestart & newConfig)
 {
 	if (version == 0 || version > UNIT_APPLE2_VER)
 		throw std::string(SS_YAML_KEY_UNIT ": Apple2: Version mismatch");
 
 	std::string model = yamlLoadHelper.LoadString(SS_YAML_KEY_MODEL);
 	SetApple2Type( ParseApple2Type(model) );	// NB. Sets default main CPU type
-	m_ConfigNew.m_Apple2Type = GetApple2Type();
+	newConfig.m_Apple2Type = GetApple2Type();
 
 	CpuLoadSnapshot(yamlLoadHelper, version);	// NB. Overrides default main CPU type
-	m_ConfigNew.m_CpuType = GetMainCpu();
+	newConfig.m_CpuType = GetMainCpu();
 
 	JoyLoadSnapshot(yamlLoadHelper);
 	KeybLoadSnapshot(yamlLoadHelper, version);
@@ -293,7 +291,7 @@ static void ParseUnitApple2(YamlLoadHelper& yamlLoadHelper, UINT version)
 
 //---
 
-static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion)
+static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion, CConfigNeedingRestart & ConfigNew)
 {
 	if (unitVersion != UNIT_SLOTS_VER)
 		throw std::string(SS_YAML_KEY_UNIT ": Slots: Version mismatch");
@@ -361,7 +359,7 @@ static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion)
 		else if (card == HD_GetSnapshotCardName())
 		{
 			bRes = HD_LoadSnapshot(yamlLoadHelper, slot, cardVersion, g_strSaveStatePath);
-			m_ConfigNew.m_bEnableHDD = true;
+			ConfigNew.m_bEnableHDD = true;
 			type = CT_GenericHDD;
 		}
 		else if (card == LanguageCardSlot0::GetSnapshotCardName())
@@ -385,7 +383,7 @@ static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion)
 
 		if (bRes)
 		{
-			m_ConfigNew.m_Slot[slot] = type;
+			ConfigNew.m_Slot[slot] = type;
 		}
 
 		yamlLoadHelper.PopMap();
@@ -395,7 +393,7 @@ static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion)
 
 //---
 
-static void ParseUnit(void)
+static void ParseUnit(CConfigNeedingRestart & ConfigNew)
 {
 	yamlHelper.GetMapStartEvent();
 
@@ -409,7 +407,7 @@ static void ParseUnit(void)
 
 	if (unit == GetSnapshotUnitApple2Name())
 	{
-		ParseUnitApple2(yamlLoadHelper, unitVersion);
+		ParseUnitApple2(yamlLoadHelper, unitVersion, ConfigNew);
 
 		if (unitVersion < 6) MemInsertNoSlotClock();	// NSC always inserted
 		else				 MemRemoveNoSlotClock();	// NSC only add if there's a misc unit
@@ -420,7 +418,7 @@ static void ParseUnit(void)
 	}
 	else if (unit == GetSnapshotUnitSlotsName())
 	{
-		ParseSlots(yamlLoadHelper, unitVersion);
+		ParseSlots(yamlLoadHelper, unitVersion, ConfigNew);
 	}
 	else if (unit == GetSnapshotUnitMiscName())
 	{
@@ -453,6 +451,7 @@ static void Snapshot_LoadState_v2(void)
 		restart = true;
 
 		CConfigNeedingRestart ConfigOld;
+		CConfigNeedingRestart ConfigNew;
 		//ConfigOld.m_Slot[0] = CT_LanguageCard;	// fixme: II/II+=LC, //e=empty
 		ConfigOld.m_Slot[1] = CT_GenericPrinter;	// fixme
 		ConfigOld.m_Slot[2] = CT_SSC;				// fixme
@@ -462,10 +461,10 @@ static void Snapshot_LoadState_v2(void)
 		//ConfigOld.m_SlotAux = ?;					// fixme
 
 		for (UINT i=0; i<NUM_SLOTS; i++)
-			m_ConfigNew.m_Slot[i] = CT_Empty;
-		m_ConfigNew.m_SlotAux = CT_Empty;
-		m_ConfigNew.m_bEnableHDD = false;
-		//m_ConfigNew.m_bEnableTheFreezesF8Rom = ?;	// todo: when support saving config
+			ConfigNew.m_Slot[i] = CT_Empty;
+		ConfigNew.m_SlotAux = CT_Empty;
+		ConfigNew.m_bEnableHDD = false;
+		//ConfigNew.m_bEnableTheFreezesF8Rom = ?;	// todo: when support saving config
 
 		MemReset();							// Also calls CpuInitialize()
 		GetPravets().Reset();
@@ -503,7 +502,7 @@ static void Snapshot_LoadState_v2(void)
 		while(yamlHelper.GetScalar(scalar))
 		{
 			if (scalar == SS_YAML_KEY_UNIT)
-				ParseUnit();
+				ParseUnit(ConfigNew);
 			else
 				throw std::string("Unknown top-level scalar: " + scalar);
 		}
@@ -516,7 +515,7 @@ static void Snapshot_LoadState_v2(void)
 		// . A change in h/w via loading a save-state avoids this VM restart
 		// The latter is the desired approach (as the former needs a "power-on" / F2 to start things again)
 
-		GetPropertySheet().ApplyNewConfig(m_ConfigNew, ConfigOld);	// Mainly just saves (some) new state to Registry
+		GetPropertySheet().ApplyNewConfig(ConfigNew, ConfigOld);	// Mainly just saves (some) new state to Registry
 
 		MemInitializeROM();
 		MemInitializeCustomROM();
