@@ -304,7 +304,6 @@ void CPropertySheetHelper::PostMsgAfterClose(HWND hWnd, PAGETYPE page)
 		if (!CheckChangesForRestart(hWnd))
 		{
 			// Cancelled
-			RestoreCurrentConfig();
 			return;
 		}
 
@@ -396,18 +395,6 @@ void CPropertySheetHelper::SaveCurrentConfig(void)
 
 	// Setup ConfigNew
 	m_ConfigNew = m_ConfigOld;
-}
-
-void CPropertySheetHelper::RestoreCurrentConfig(void)
-{
-	// NB. clone-type is encoded in g_Apple2Type
-	SetApple2Type(m_ConfigOld.m_Apple2Type);
-	SetMainCpu(m_ConfigOld.m_CpuType);
-	GetCardMgr().Insert(SLOT4, m_ConfigOld.m_Slot[SLOT4]);
-	GetCardMgr().Insert(SLOT5, m_ConfigOld.m_Slot[SLOT5]);
-	HD_SetEnabled(m_ConfigOld.m_bEnableHDD);
-	GetPropertySheet().SetTheFreezesF8Rom(m_ConfigOld.m_bEnableTheFreezesF8Rom);
-	m_ConfigNew.m_videoRefreshRate = m_ConfigOld.m_videoRefreshRate;	// Not SetVideoRefreshRate(), as this re-inits much Video/NTSC state!
 }
 
 bool CPropertySheetHelper::IsOkToSaveLoadState(HWND hWnd, const bool bConfigChanged)
