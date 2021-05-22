@@ -28,7 +28,7 @@ public:
 
 	// create and initialise to current state
 	// do not use in static variables
-	static CConfigNeedingRestart create()
+	static CConfigNeedingRestart Create()
 	{
 		CConfigNeedingRestart config;
 		config.Reload();

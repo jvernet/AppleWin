@@ -266,23 +266,20 @@ static UINT ParseFileHdr(void)
 
 //---
 
-static void ParseUnitApple2(YamlLoadHelper& yamlLoadHelper, UINT version, CConfigNeedingRestart & newConfig)
+static void ParseUnitApple2(YamlLoadHelper& yamlLoadHelper, UINT version)
 {
 	if (version == 0 || version > UNIT_APPLE2_VER)
 		throw std::string(SS_YAML_KEY_UNIT ": Apple2: Version mismatch");
 
 	std::string model = yamlLoadHelper.LoadString(SS_YAML_KEY_MODEL);
 	SetApple2Type( ParseApple2Type(model) );	// NB. Sets default main CPU type
-	newConfig.m_Apple2Type = GetApple2Type();
 
 	CpuLoadSnapshot(yamlLoadHelper, version);	// NB. Overrides default main CPU type
-	newConfig.m_CpuType = GetMainCpu();
 
 	JoyLoadSnapshot(yamlLoadHelper);
 	KeybLoadSnapshot(yamlLoadHelper, version);
 	SpkrLoadSnapshot(yamlLoadHelper);
 	GetVideo().VideoLoadSnapshot(yamlLoadHelper, version);
-	newConfig.m_videoRefreshRate = GetVideo().GetVideoRefreshRate();
 	MemLoadSnapshot(yamlLoadHelper, version);
 
 	// g_Apple2Type may've changed: so redraw frame (title, buttons, leds, etc)
@@ -292,7 +289,7 @@ static void ParseUnitApple2(YamlLoadHelper& yamlLoadHelper, UINT version, CConfi
 
 //---
 
-static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion, CConfigNeedingRestart & ConfigNew)
+static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion)
 {
 	if (unitVersion != UNIT_SLOTS_VER)
 		throw std::string(SS_YAML_KEY_UNIT ": Slots: Version mismatch");
@@ -360,7 +357,6 @@ static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion, CConfig
 		else if (card == HD_GetSnapshotCardName())
 		{
 			bRes = HD_LoadSnapshot(yamlLoadHelper, slot, cardVersion, g_strSaveStatePath);
-			ConfigNew.m_bEnableHDD = true;
 			type = CT_GenericHDD;
 		}
 		else if (card == LanguageCardSlot0::GetSnapshotCardName())
@@ -382,11 +378,6 @@ static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion, CConfig
 			throw std::string("Slots: Unknown card: " + card);	// todo: don't throw - just ignore & continue
 		}
 
-		if (bRes)
-		{
-			ConfigNew.m_Slot[slot] = type;
-		}
-
 		yamlLoadHelper.PopMap();
 		yamlLoadHelper.PopMap();
 	}
@@ -394,7 +385,7 @@ static void ParseSlots(YamlLoadHelper& yamlLoadHelper, UINT unitVersion, CConfig
 
 //---
 
-static void ParseUnit(CConfigNeedingRestart & ConfigNew)
+static void ParseUnit()
 {
 	yamlHelper.GetMapStartEvent();
 
@@ -408,7 +399,7 @@ static void ParseUnit(CConfigNeedingRestart & ConfigNew)
 
 	if (unit == GetSnapshotUnitApple2Name())
 	{
-		ParseUnitApple2(yamlLoadHelper, unitVersion, ConfigNew);
+		ParseUnitApple2(yamlLoadHelper, unitVersion);
 
 		if (unitVersion < 6) MemInsertNoSlotClock();	// NSC always inserted
 		else				 MemRemoveNoSlotClock();	// NSC only add if there's a misc unit
@@ -419,7 +410,7 @@ static void ParseUnit(CConfigNeedingRestart & ConfigNew)
 	}
 	else if (unit == GetSnapshotUnitSlotsName())
 	{
-		ParseSlots(yamlLoadHelper, unitVersion, ConfigNew);
+		ParseSlots(yamlLoadHelper, unitVersion);
 	}
 	else if (unit == GetSnapshotUnitMiscName())
 	{
@@ -451,8 +442,7 @@ static void Snapshot_LoadState_v2(void)
 
 		restart = true;
 
-		CConfigNeedingRestart ConfigOld = CConfigNeedingRestart::create();
-		CConfigNeedingRestart ConfigNew;
+		const CConfigNeedingRestart ConfigOld = CConfigNeedingRestart::Create();
 
 		MemReset();							// Also calls CpuInitialize()
 		GetPravets().Reset();
@@ -489,7 +479,7 @@ static void Snapshot_LoadState_v2(void)
 		while(yamlHelper.GetScalar(scalar))
 		{
 			if (scalar == SS_YAML_KEY_UNIT)
-				ParseUnit(ConfigNew);
+				ParseUnit();
 			else
 				throw std::string("Unknown top-level scalar: " + scalar);
 		}
@@ -502,6 +492,7 @@ static void Snapshot_LoadState_v2(void)
 		// . A change in h/w via loading a save-state avoids this VM restart
 		// The latter is the desired approach (as the former needs a "power-on" / F2 to start things again)
 
+		const CConfigNeedingRestart ConfigNew = CConfigNeedingRestart::Create();
 		GetPropertySheet().ApplyNewConfig(ConfigNew, ConfigOld);	// Mainly just saves (some) new state to Registry
 
 		MemInitializeROM();
