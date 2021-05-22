@@ -51,6 +51,7 @@ public:
 		m_videoRefreshRate = GetVideo().GetVideoRefreshRate();
 		m_tfeEnabled = get_tfe_enabled();
 		m_tfeInterface = get_tfe_interface();
+		m_SlotAux = CT_Empty;
 	}
 
 	const CConfigNeedingRestart& operator= (const CConfigNeedingRestart& other)
@@ -58,6 +59,7 @@ public:
 		m_Apple2Type = other.m_Apple2Type;
 		m_CpuType = other.m_CpuType;
 		memcpy(m_Slot, other.m_Slot, sizeof(m_Slot));
+		m_SlotAux = other.m_SlotAux;
 		m_bEnableHDD = other.m_bEnableHDD;
 		m_tfeEnabled = other.m_tfeEnabled;
 		m_tfeInterface = other.m_tfeInterface;
@@ -72,6 +74,7 @@ public:
 		return	m_Apple2Type == other.m_Apple2Type &&
 			m_CpuType == other.m_CpuType &&
 			memcmp(m_Slot, other.m_Slot, sizeof(m_Slot)) == 0 &&
+			m_SlotAux == other.m_SlotAux &&
 			m_bEnableHDD == other.m_bEnableHDD &&
 			m_tfeEnabled == other.m_tfeEnabled &&
 			m_tfeInterface == other.m_tfeInterface &&
