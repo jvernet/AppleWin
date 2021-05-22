@@ -450,21 +450,8 @@ static void Snapshot_LoadState_v2(void)
 
 		restart = true;
 
-		CConfigNeedingRestart ConfigOld;
+		CConfigNeedingRestart ConfigOld = CConfigNeedingRestart::create();
 		CConfigNeedingRestart ConfigNew;
-		//ConfigOld.m_Slot[0] = CT_LanguageCard;	// fixme: II/II+=LC, //e=empty
-		ConfigOld.m_Slot[1] = CT_GenericPrinter;	// fixme
-		ConfigOld.m_Slot[2] = CT_SSC;				// fixme
-		//ConfigOld.m_Slot[3] = CT_Uthernet;		// todo
-		ConfigOld.m_Slot[6] = CT_Disk2;				// fixme
-		ConfigOld.m_Slot[7] = ConfigOld.m_bEnableHDD ? CT_GenericHDD : CT_Empty;	// fixme
-		//ConfigOld.m_SlotAux = ?;					// fixme
-
-		for (UINT i=0; i<NUM_SLOTS; i++)
-			ConfigNew.m_Slot[i] = CT_Empty;
-		ConfigNew.m_SlotAux = CT_Empty;
-		ConfigNew.m_bEnableHDD = false;
-		//ConfigNew.m_bEnableTheFreezesF8Rom = ?;	// todo: when support saving config
 
 		MemReset();							// Also calls CpuInitialize()
 		GetPravets().Reset();
@@ -476,7 +463,6 @@ static void Snapshot_LoadState_v2(void)
 		else
 		{
 			_ASSERT(GetCardMgr().QuerySlot(SLOT2) == CT_Empty);
-			ConfigOld.m_Slot[2] = CT_Empty;
 		}
 
 		if (GetCardMgr().QuerySlot(SLOT4) == CT_MouseInterface)
