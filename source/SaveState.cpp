@@ -282,6 +282,7 @@ static void ParseUnitApple2(YamlLoadHelper& yamlLoadHelper, UINT version, CConfi
 	KeybLoadSnapshot(yamlLoadHelper, version);
 	SpkrLoadSnapshot(yamlLoadHelper);
 	GetVideo().VideoLoadSnapshot(yamlLoadHelper, version);
+	newConfig.m_videoRefreshRate = GetVideo().GetVideoRefreshRate();
 	MemLoadSnapshot(yamlLoadHelper, version);
 
 	// g_Apple2Type may've changed: so redraw frame (title, buttons, leds, etc)
