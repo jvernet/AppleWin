@@ -12,5 +12,5 @@ extern FILE* g_fh;	// Filehandle for log file
 
 void LogInit(void);
 void LogDone(void);
-void LogOutput(LPCTSTR format, ...);
-void LogFileOutput(LPCTSTR format, ...);
+void LogOutput(LPCTSTR format, ...) __attribute__ ((format (printf, 1, 2)));
+void LogFileOutput(LPCTSTR format, ...) __attribute__ ((format (printf, 1, 2)));
