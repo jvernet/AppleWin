@@ -3,6 +3,8 @@
 #include "Card.h"
 #include "CmdLine.h"
 
+struct JOYINFOEX;
+
 class SNESMAXCard : public Card
 {
 public:
@@ -31,10 +33,17 @@ public:
 	virtual void SaveSnapshot(YamlSaveHelper& yamlSaveHelper);
 	virtual bool LoadSnapshot(YamlLoadHelper& yamlLoadHelper, UINT version);
 
+	static bool ParseControllerMappingFile(UINT joyNum, const char* pathname, std::string& errorMsg);
+
 private:
+	UINT GetControllerButtons(UINT joyNum, JOYINFOEX& infoEx, bool altControllerType);
+
+	enum Button { B, Y, SELECT, START, U, D, L, R, A, X, LB, RB, UNUSED1, UNUSED2, UNUSED3, UNUSED4, NUM_BUTTONS, UNUSED };
+
 	UINT m_buttonIndex;
 	UINT m_controller1Buttons;
 	UINT m_controller2Buttons;
 
 	bool m_altControllerType[2];
+	static UINT m_altControllerButtons[2][NUM_BUTTONS];
 };
