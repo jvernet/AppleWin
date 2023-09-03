@@ -91,6 +91,8 @@
     <ClInclude Include="source\Log.h" />
     <ClInclude Include="source\Memory.h" />
     <ClInclude Include="source\Mockingboard.h" />
+    <ClInclude Include="source\MockingboardCardManager.h" />
+    <ClInclude Include="source\MockingboardDefs.h" />
     <ClInclude Include="source\MouseInterface.h" />
     <ClInclude Include="source\NoSlotClock.h" />
     <ClInclude Include="source\NTSC.h" />
@@ -102,8 +104,6 @@
     <ClInclude Include="source\Riff.h" />
     <ClInclude Include="source\SAM.h" />
     <ClInclude Include="source\SaveState.h" />
-    <ClInclude Include="source\SaveState_Structs_common.h" />
-    <ClInclude Include="source\SaveState_Structs_v1.h" />
     <ClInclude Include="source\SerialComms.h" />
     <ClInclude Include="source\SNESMAX.h" />
     <ClInclude Include="source\SoundCore.h" />
@@ -176,6 +176,7 @@
     <ClCompile Include="source\Disk2CardManager.cpp" />
     <ClCompile Include="source\FourPlay.cpp" />
     <ClCompile Include="source\FrameBase.cpp" />
+    <ClCompile Include="source\MockingboardCardManager.cpp" />
     <ClCompile Include="source\RGBMonitor.cpp" />
     <ClCompile Include="source\SAM.cpp" />
     <ClCompile Include="source\Debugger\Debug.cpp" />

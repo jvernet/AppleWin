@@ -7,6 +7,7 @@
 class LinuxFrame : public FrameBase
 {
 public:
+  LinuxFrame();
 
   void Initialize(bool resetVideoState) override;
   void Destroy() override;
@@ -41,6 +42,8 @@ public:
   // in AppleWin this happens in AppleWin.cpp, but it is useful to share it
   virtual void Begin();
   virtual void End();
+
+  virtual void LoadSnapshot();
 
 protected:
   std::vector<uint8_t> myFramebuffer;

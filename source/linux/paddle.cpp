@@ -2,17 +2,15 @@
 
 #include "linux/paddle.h"
 
-#include "Log.h"
 #include "Memory.h"
-#include "Common.h"
 #include "CPU.h"
+#include "CopyProtectionDongles.h"
 
 namespace
 {
   unsigned __int64 g_nJoyCntrResetCycle = 0;	// Abs cycle that joystick counters were reset
   const double PDL_CNTR_INTERVAL = 2816.0 / 255.0;	// 11.04 (From KEGS)
 }
-
 
 
 std::shared_ptr<const Paddle> Paddle::instance;
@@ -96,12 +94,30 @@ BYTE __stdcall JoyReadButton(WORD pc, WORD addr, BYTE bWrite, BYTE d, ULONG uExe
       switch (addr)
       {
       case Paddle::ourOpenApple:
-        pressed = Paddle::instance->getButton(0);
+        if (CopyProtectionDonglePB0() >= 0)
+        {
+          pressed = CopyProtectionDonglePB0();
+        }
+        else
+        {
+          pressed = Paddle::instance->getButton(0);
+        }
         break;
       case Paddle::ourSolidApple:
-        pressed = Paddle::instance->getButton(1);
+        if (CopyProtectionDonglePB1() >= 0)
+        {
+          pressed = CopyProtectionDonglePB1();
+        }
+        else
+        {
+          pressed = Paddle::instance->getButton(1);
+        }
         break;
       case Paddle::ourThirdApple:
+        if (CopyProtectionDonglePB2() >= 0)
+        {
+          pressed = CopyProtectionDonglePB2();
+        }
         break;
       }
     }
@@ -112,22 +128,35 @@ BYTE __stdcall JoyReadButton(WORD pc, WORD addr, BYTE bWrite, BYTE d, ULONG uExe
 
 BYTE __stdcall JoyReadPosition(WORD pc, WORD address, BYTE bWrite, BYTE d, ULONG uExecutedCycles)
 {
-  const int nJoyNum = (address & 2) ? 1 : 0;	// $C064..$C067
-
   CpuCalcCycles(uExecutedCycles);
-  BOOL nPdlCntrActive = 0;
 
-  if (Paddle::instance)
+  const int pdl = address & 3;  // 11: joy number & axis
+  const int copyProtection = CopyProtectionDonglePDL(pdl);
+
+  // if nothing is connected, set it to TRUE
+  BOOL nPdlCntrActive = TRUE;
+
+  const auto setPdlPos = [&nPdlCntrActive] (const int pos) {
+    nPdlCntrActive = g_nCumulativeCycles <= (g_nJoyCntrResetCycle + (unsigned __int64) ((double)pos * PDL_CNTR_INTERVAL));
+  };
+
+  if (copyProtection >= 0)
   {
+    // if active, this has the highest priority
+    setPdlPos(copyProtection);
+  }
+  else if (Paddle::instance)
+  {
+    const int nJoyNum = (address & 2) ? 1 : 0;	// $C064..$C067
     if (nJoyNum == 0)
     {
       int axis = address & 1;
-      int pdl = Paddle::instance->getAxisValue(axis);
-      // This is from KEGS. It helps games like Championship Lode Runner & Boulderdash
-      if (pdl >= 255)
-	pdl = 280;
+      int pos = Paddle::instance->getAxisValue(axis);
+      // This is from KEGS. It helps games like Championship Lode Runner, Boulderdash & Learning with Leeper(GH#1128)
+      if (pos >= 255)
+        pos = 287;
 
-      nPdlCntrActive  = g_nCumulativeCycles <= (g_nJoyCntrResetCycle + (unsigned __int64) ((double)pdl * PDL_CNTR_INTERVAL));
+      setPdlPos(pos);
     }
   }
 

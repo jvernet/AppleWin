@@ -5,6 +5,7 @@
 #include "frontends/common2/commonframe.h"
 #include "frontends/common2/speed.h"
 #include "frontends/common2/programoptions.h"
+#include "linux/network/portfwds.h"
 #include <SDL.h>
 
 namespace common2
@@ -26,21 +27,29 @@ namespace sa2
     void FrameRefreshStatus(int drawflags) override;
     int FrameMessageBox(LPCSTR lpText, LPCSTR lpCaption, UINT uType) override;
     void GetBitmap(LPCSTR lpBitmapName, LONG cb, LPVOID lpvBits) override;
+    std::shared_ptr<NetworkBackend> CreateNetworkBackend(const std::string & interfaceName) override;
 
     void ProcessEvents(bool &quit);
 
-    void ExecuteOneFrame(const size_t msNextFrame);
+    void ExecuteOneFrame(const uint64_t microseconds);
     void ChangeMode(const AppMode_e mode);
     void SingleStep();
     void ResetHardware();
     bool HardwareChanged() const;
+
+    void FrameResetMachineState();
     virtual void ResetSpeed();
+
     void LoadSnapshot() override;
 
     const std::shared_ptr<SDL_Window> & GetWindow() const;
 
     void getDragDropSlotAndDrive(size_t & slot, size_t & drive) const;
     void setDragDropSlotAndDrive(const size_t slot, const size_t drive);
+
+    bool & getPreserveAspectRatio();
+
+    const common2::Speed & getSpeed() const;
 
     static void setGLSwapInterval(const int interval);
 
@@ -57,8 +66,8 @@ namespace sa2
     void ProcessMouseButton(const SDL_MouseButtonEvent & button);
     void ProcessMouseMotion(const SDL_MouseMotionEvent & motion);
 
-    void ExecuteInRunningMode(const size_t msNextFrame);
-    void ExecuteInDebugMode(const size_t msNextFrame);
+    void ExecuteInRunningMode(const uint64_t microseconds);
+    void ExecuteInDebugMode(const uint64_t microseconds);
     void Execute(const DWORD uCycles);
 
     void SetFullSpeed(const bool value);
@@ -69,6 +78,7 @@ namespace sa2
     static double GetRelativePosition(const int value, const int width);
 
     int myTargetGLSwap;
+    bool myPreserveAspectRatio;
     bool myForceCapsLock;
     int myMultiplier;
     bool myFullscreen;
@@ -79,6 +89,8 @@ namespace sa2
     bool myScrollLockFullSpeed;
 
     common2::Speed mySpeed;
+
+    std::vector<PortFwd> myPortFwds;
 
     std::shared_ptr<SDL_Window> myWindow;
 

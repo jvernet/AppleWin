@@ -1,17 +1,16 @@
 #pragma once
 
-#include "winbase.h"
+#include "winhandles.h"
 #include "winerror.h"
 #include "mmreg.h"
 #include "guiddef.h"
 
+#include <atomic>
 #include <vector>
 #include <memory>
 #include <mutex>
 
-#define IID_IDirectSoundNotify 1234
 #define DS_OK				0
-#define DSBPN_OFFSETSTOP		-1
 
 #define DSBCAPS_CTRLVOLUME          0x00000080
 #define DSBCAPS_LOCSOFTWARE         0x00000008
@@ -28,14 +27,29 @@
 #define DSBSTATUS_BUFFERLOST        0x00000002
 #define DSBSTATUS_LOOPING           0x00000004
 
-#define DSERR_BUFFERLOST	    MAKE_DSHRESULT(150)
-
 #define DSBLOCK_ENTIREBUFFER        0x00000002
 
-#define	_FACDS		0x878
-#define	MAKE_DSHRESULT(code)		MAKE_HRESULT(1,_FACDS,code)
+#define _FACDS                      0x878
+#define MAKE_DSHRESULT(code)        MAKE_HRESULT(1,_FACDS,code)
 
-#define	DSSCL_NORMAL		1
+#define DSERR_ALLOCATED             MAKE_DSHRESULT(10)
+#define DSERR_CONTROLUNAVAIL        MAKE_DSHRESULT(30)
+#define DSERR_INVALIDPARAM          E_INVALIDARG
+#define DSERR_INVALIDCALL           MAKE_DSHRESULT(50)
+#define DSERR_GENERIC               E_FAIL
+#define DSERR_PRIOLEVELNEEDED       MAKE_DSHRESULT(70)
+#define DSERR_OUTOFMEMORY           E_OUTOFMEMORY
+#define DSERR_BADFORMAT             MAKE_DSHRESULT(100)
+#define DSERR_UNSUPPORTED           E_NOTIMPL
+#define DSERR_NODRIVER              MAKE_DSHRESULT(120)
+#define DSERR_ALREADYINITIALIZED    MAKE_DSHRESULT(130)
+#define DSERR_NOAGGREGATION         CLASS_E_NOAGGREGATION
+#define DSERR_BUFFERLOST            MAKE_DSHRESULT(150)
+#define DSERR_OTHERAPPHASPRIO       MAKE_DSHRESULT(160)
+#define DSERR_UNINITIALIZED         MAKE_DSHRESULT(170)
+#define DSERR_NOINTERFACE           E_NOINTERFACE
+
+#define	DSSCL_NORMAL                1
 
 typedef BOOL (CALLBACK *LPDSENUMCALLBACK)(LPGUID,LPCSTR,LPCSTR,LPVOID);
 
@@ -70,19 +84,21 @@ typedef const DSBPOSITIONNOTIFY *LPCDSBPOSITIONNOTIFY;
 
 struct IDirectSoundNotify
 {
-  HRESULT SetNotificationPositions(DWORD cPositionNotifies, LPCDSBPOSITIONNOTIFY lpcPositionNotifies);
 };
 typedef struct IDirectSoundNotify *LPDIRECTSOUNDNOTIFY,**LPLPDIRECTSOUNDNOTIFY;
 
 class IDirectSoundBuffer : public IUnknown
 {
-  const std::unique_ptr<IDirectSoundNotify> mySoundNotify;
   std::vector<char> mySoundBuffer;
 
   size_t myPlayPosition = 0;
   size_t myWritePosition = 0;
   WORD myStatus = 0;
   LONG myVolume = DSBVOLUME_MAX;
+
+  // updated by the callback
+  std::atomic_size_t myNumberOfUnderruns;
+  std::mutex myMutex;
 
  public:
   const size_t bufferSize;
@@ -91,19 +107,11 @@ class IDirectSoundBuffer : public IUnknown
   const size_t bitsPerSample;
   const size_t flags;
 
-  std::mutex mutex;
-
   IDirectSoundBuffer(const size_t bufferSize, const size_t channels, const size_t sampleRate, const size_t bitsPerSample, const size_t flags);
-  HRESULT Release() override;
-
-  HRESULT QueryInterface(int riid, void **ppvObject);
+  virtual HRESULT Release() override;
 
   HRESULT SetCurrentPosition( DWORD dwNewPosition );
   HRESULT GetCurrentPosition( LPDWORD lpdwCurrentPlayCursor, LPDWORD lpdwCurrentWriteCursor );
-
-  // Read is NOT part of Windows API
-  HRESULT Read( DWORD dwReadBytes, LPVOID * lplpvAudioPtr1, DWORD * lpdwAudioBytes1, LPVOID * lplpvAudioPtr2, DWORD * lpdwAudioBytes2);
-  DWORD GetBytesInBuffer();
 
   HRESULT Lock( DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID * lplpvAudioPtr1, DWORD * lpdwAudioBytes1, LPVOID * lplpvAudioPtr2, DWORD * lpdwAudioBytes2, DWORD dwFlags );
   HRESULT Unlock( LPVOID lpvAudioPtr1, DWORD dwAudioBytes1, LPVOID lpvAudioPtr2, DWORD dwAudioBytes2 );
@@ -114,10 +122,15 @@ class IDirectSoundBuffer : public IUnknown
   HRESULT SetVolume( LONG lVolume );
   HRESULT GetVolume( LONG * lplVolume );
 
-  double GetLogarithmicVolume() const;  // in [0, 1]
-
   HRESULT GetStatus( LPDWORD lpdwStatus );
   HRESULT Restore();
+
+  // NOT part of Windows API
+  DWORD Read( DWORD dwReadBytes, LPVOID * lplpvAudioPtr1, DWORD * lpdwAudioBytes1, LPVOID * lplpvAudioPtr2, DWORD * lpdwAudioBytes2);
+  DWORD GetBytesInBuffer();
+  size_t GetBufferUnderruns() const;
+  void ResetUnderrruns();
+  double GetLogarithmicVolume() const;  // in [0, 1]
 };
 typedef class IDirectSoundBuffer *LPDIRECTSOUNDBUFFER,**LPLPDIRECTSOUNDBUFFER;
 

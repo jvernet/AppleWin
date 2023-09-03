@@ -88,6 +88,8 @@ Keyboard emulation
 * ``JOYPAD_R``: equivalent to ``F9`` to cycle video types
 * ``JOYPAD_L``: equivalent to ``CTRL-SHIFT-F6`` to cycle 50% scan lines
 * ``START``: equivalent to ``F2`` to reset the machine
+* ``SELECT``: press twice quickly to exit
+* ``JOYPAD_L2``: save configuration to `/tmp/applewin.retro.conf`
 
 In order to have a better experience with the keyboard, one should probably enable *Game Focus Mode* (normally Scroll-Lock) to disable hotkeys.
 
@@ -112,6 +114,23 @@ qapple can be managed from Qt Creator as well and the 2 have coexisted so far, b
 
 ```
 git clone https://github.com/audetto/AppleWin.git --recursive
+```
+
+### Fedora
+
+On Fedora 35, from a fresh installation, install all packages from [fedora.list.txt](/source/linux/fedora.list.txt).
+
+### Raspberry Pi OS, Ubuntu and other Debian distributions
+
+Install all packages from [raspbian.list.txt](/source/linux/raspbian.list.txt).
+
+You can use `sudo apt-get -y install $(cat AppleWin/source/linux/raspbian.list.txt)` for an automated installation.
+
+See [Travis](/.travis.yml) CI too.
+
+### Building
+
+```
 cd AppleWin
 mkdir build
 cd build
@@ -130,18 +149,6 @@ cmake -DBUILD_SA2=ON -DBUILD_LIBRETRO=ON ..
 ```
 
 or use `cmake-gui` (if none is selected, they are all built).
-
-### Fedora
-
-On Fedora 35, from a fresh installation, install all packages from [fedora.list.txt](/source/linux/fedora.list.txt).
-
-### Raspberry Pi OS, Ubuntu and other Debian distributions
-
-Install all packages from [raspbian.list.txt](/source/linux/raspbian.list.txt).
-
-You can use `sudo apt-get -y install $(cat raspbian.list.txt)` for an automated installation.
-
-See [Travis](/.travis.yml) CI too.
 
 ### Packaging
 

@@ -30,7 +30,6 @@
 #define IDR_APPLE2_PLUS_ROM             127
 #define IDR_APPLE2E_ROM                 128
 #define IDR_APPLE2E_ENHANCED_ROM        129
-#define IDC_MB_ENABLE                   130
 #define IDD_TFE_SETTINGS_DIALOG         131
 #define IDR_PRINTDRVR_FW                132
 #define IDD_PROPPAGE_ADVANCED           132
@@ -68,9 +67,8 @@
 #define IDC_PASTE_FROM_CLIPBOARD        1023
 #define IDC_SPIN_XTRIM                  1026
 #define IDC_SPIN_YTRIM                  1027
-#define IDC_PHASOR_ENABLE               1029
-#define IDC_SAM_ENABLE                  1030
-#define IDC_SOUNDCARD_DISABLE           1031
+#define IDC_SOUNDCARD_SLOT4             1028
+#define IDC_SOUNDCARD_SLOT5             1029
 #define IDC_TFE_SETTINGS_ENABLE_T       1032
 #define IDC_TFE_SETTINGS_ENABLE         1033
 #define IDC_TFE_SETTINGS_INTERFACE_T    1034
@@ -113,7 +111,6 @@
 #define IDC_COMBO_DISK1                 1080
 #define IDC_COMBO_DISK2                 1081
 #define IDC_CHECK_FS_SHOW_SUBUNIT_STATUS 1082
-#define IDC_COMBO_CP_DONGLE             1082
 #define IDC_CHECK_VERTICAL_BLEND        1083
 #define IDC_CHECK_50HZ_VIDEO            1084
 #define IDC_COMBO_DISK1_SLOT5           1085
@@ -123,6 +120,7 @@
 #define IDC_CHECK_VIDHD_IN_SLOT3        1089
 #define IDC_CHECK_TFE_VIRTUAL_DNS       1090
 #define IDC_TFE_NPCAP_INFO              1091
+#define IDC_COMBO_GAME_IO_CONNECTOR     1092
 #define IDM_EXIT                        40001
 #define IDM_HELP                        40002
 #define IDM_ABOUT                       40003
